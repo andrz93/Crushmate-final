@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Crushmate Home</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-center">
+
+  <!-- 上方選單 -->
+  <div class="flex justify-center space-x-4 mt-8">
+    <button class="px-6 py-2 bg-blue-400 text-white rounded-full">Classmate</button>
+    <button class="px-6 py-2 bg-pink-400 text-white rounded-full">Crushmate</button>
+  </div>
+
+  <!-- 中間卡片 -->
+  <div class="flex flex-col items-center mt-10">
+    <div class="w-72 h-96 bg-white rounded-xl shadow-lg flex flex-col items-center justify-center border">
+      <div class="w-24 h-24 rounded-full bg-gray-300 mb-4"></div>
+      <p class="text-lg font-bold">{{ user.username }}</p>
+      <p class="text-sm text-gray-500">Department</p>
+    </div>
+
+    <!-- X / O 按鈕 -->
+    <div class="flex justify-around w-40 mt-6 text-3xl">
+      <button class="text-red-500">✕</button>
+      <button class="text-green-500">◯</button>
+    </div>
+  </div>
+
+  <!-- 底部選單 -->
+  <div class="fixed bottom-0 w-full bg-white border-t shadow-md">
+    <div class="flex justify-around py-3">
+      <a href="{% url 'home' %}" class="text-gray-500 font-bold">Home</a>
+      <a href="{% url 'chat' %}" class="text-gray-500 font-bold">Chat</a>
+      <a href="{% url 'settings' %}" class="text-gray-500 font-bold">Settings</a>
+      <a href="{% url 'account_logout' %}" class="text-gray-500 font-bold">Logout</a>
+
+    </div>
+  </div>
+
+</body>
+</html>

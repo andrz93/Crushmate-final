@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+
+<div class="absolute top-5 left-5 text-3xl font-semibold text-gray-700">
+  Settings Page
+</div>
+
+<div class="flex justify-center items-center min-h-screen bg-gray-100 pb-24">
+  <div class="flex flex-col gap-4 w-48">
+    <a href="{% url 'profilepage' %}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded text-center">Profile</a>
+  </div>
+</div>
+
+{% endblock %}
