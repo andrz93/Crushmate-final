@@ -171,3 +171,6 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'noreply.crushmate@gmail.com'
 EMAIL_HOST_PASSWORD = 'biew lkyv ddhl bvrx'
 DEFAULT_FROM_EMAIL = 'Crushmate <noreply.crushmate@gmail.com>'
+
+#用來同意使用此IP
+ALLOWED_HOSTS = ['192.168.0.1']
