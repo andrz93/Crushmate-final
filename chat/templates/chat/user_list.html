@@ -1,0 +1,55 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat List | Crushmate</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-6">
+
+  <div class="max-w-2xl mx-auto">
+    <h2 class="text-2xl font-bold mb-6 text-pink-700 text-center">Your Match</h2>
+
+    <div class="bg-white shadow rounded-lg divide-y divide-gray-200">
+      {% for user in users %}
+        <a href="{% url 'chat_room' user.username %}" class="flex items-center px-4 py-4 hover:bg-pink-50 transition duration-150">
+          <div class="flex-shrink-0">
+            <img class="h-10 w-10 rounded-full object-cover" src="https://ui-avatars.com/api/?name={{ user.username }}&background=FFB6C1&color=fff" alt="avatar">
+          </div>
+          <div class="ml-4 flex-1">
+            <div class="text-lg font-semibold text-gray-800">{{ user.username }}</div>
+            <div class="text-sm text-gray-500">Start chatting</div>
+          </div>
+          <div class="text-gray-400">➤</div>
+        </a>
+      {% empty %}
+        <p class="text-center py-6 text-gray-500">No other users available</p>
+      {% endfor %}
+    </div>
+  </div>
+
+</body>
+</html>
+
+  <!-- 底部選單 --> 
+  </div>
+  <div class="fixed bottom-0 w-full bg-white border-t shadow-md">
+    <div class="flex justify-around py-3">
+      <a href="{% url 'home' %}" class="text-gray-500 font-bold">Home</a>
+      <a href="{% url 'user_list' %}" class="text-gray-500 font-bold">Chat</a>
+      <a href="{% url 'settings' %}" class="text-gray-500 font-bold">Settings</a>
+      <a href="{% url 'account_logo
+      
+      
+      
+      
+      
+      
+      
+      
+      ut' %}" class="text-gray-500 font-bold">Logout</a>
+    </div>
+  </div>
+</body>
+</html>
