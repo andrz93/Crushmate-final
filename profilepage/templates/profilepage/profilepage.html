@@ -94,17 +94,29 @@
 <h1>My Profile</h1>
 
 <div class="grid">
-    {% for photo in photos %}
-        <div class="grid-item">
-            <img src="{{ photo.image.url }}" alt="Photo">
-            <form method="post" action="{% url 'delete_photo' photo.id %}">
-                {% csrf_token %}
-                <button type="submit" class="delete-btn">Delete</button>
-            </form>
-        </div>
-    {% empty %}
-        <p>No photos uploaded yet.</p>
-    {% endfor %}
+    <div class="flex space-x-4">      
+        {% for photo in photos %}
+            <div class="flex flex-col items-center">
+                <img src="{{ photo.image.url }}" alt="Photo" class="rounded-lg shadow-md w-32 h-48 object-cover">
+
+                {% if photo.is_main %}
+                    <span class="text-sm text-green-600 font-semibold mt-1">Main Photo</span>
+                {% endif %}
+
+                <!-- 刪除按鈕 -->
+                <form method="post" action="{% url 'delete_photo' photo.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="mt-1 px-3 py-1 bg-red-500 text-white rounded">Delete</button>
+                </form>
+
+                <!-- 設為主圖片按鈕-->             
+                <form method="post" action="{% url 'set_main_photo' photo.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="mt-1 px-3 py-1 bg-blue-500 text-white rounded">Set as Main</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
 </div>
 
 <form method="post" enctype="multipart/form-data" class="upload-form">
