@@ -1,9 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  {% load static %}
   <meta charset="UTF-8">
   <title>Crushmate Home</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>                               
+    .circle-avatar {      
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+  </style>
+  
 </head>
 <body class="bg-gray-100 text-center">
 
@@ -16,7 +26,15 @@
   <!-- 中間卡片 -->
   <div class="flex flex-col items-center mt-10">
     <div class="w-72 h-96 bg-white rounded-xl shadow-lg flex flex-col items-center justify-center border">
-      <div class="w-24 h-24 rounded-full bg-gray-300 mb-4"></div>
+    <!-- 大頭貼主圖片 -->                                                                           
+      <div class="mb-4">
+        {% if main_photo %}                                                                         
+          <img src="{{ main_photo.image.url }}" alt="Profile Photo" class="circle-avatar">            
+        {% else %}                                                                                      
+          <img src="{% static 'default-avatar.png' %}" alt="Default Avatar" class="circle-avatar">      
+        {% endif %}                                                                                    
+      </div>  
+
       <p class="text-lg font-bold">{{ user.username }}</p>
       <p class="text-sm text-gray-500">Department</p>
     </div>
