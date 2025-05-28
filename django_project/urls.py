@@ -29,6 +29,5 @@ urlpatterns = [
     # 這邊是Andrew後來加的頁面跳轉的連結
     path('', include('navigation.urls')),  # 預設首頁交給 navigation
     path('home/', nav_views.homepage, name='home'),
-    
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
