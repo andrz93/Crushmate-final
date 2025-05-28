@@ -173,4 +173,4 @@ EMAIL_HOST_PASSWORD = 'biew lkyv ddhl bvrx'
 DEFAULT_FROM_EMAIL = 'Crushmate <noreply.crushmate@gmail.com>'
 
 #用來同意使用此IP
-ALLOWED_HOSTS = ['192.168.0.1']
+ALLOWED_HOSTS = ['*']
