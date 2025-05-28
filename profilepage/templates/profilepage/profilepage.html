@@ -1,130 +1,79 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>My Profile</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 40px;
-            max-width: 1200px;
-            margin: auto;
-            background-color: #f4f6f8;
-            position: relative;
-        }
-        h1 {
-            text-align: center;
-            color: #4a4a4a;
-            font-size: 32px;
-        }
-        .grid {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 60px;
-        }
-        .grid-item {
-            width: 18%;
-            text-align: center;
-        }
-        .grid-item img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            border-radius: 8px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.2);
-        }
-        .delete-btn {
-            margin-top: 5px;
-            background-color: #dc3545;
-            padding: 10px 20px;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .delete-btn:hover {
-            background-color: #c82333;
-        }
-        .settings-link {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: #4b5563;
-            font-weight: bold;
-            font-size: 18px;
-            text-decoration: none;
-        }
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}My Profile{% endblock %}
+{% block content %}
 
-        .upload-form {
-            text-align: center;
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-
-        .custom-file-upload {
-            display: inline-block;
-            font-weight: bold;
-            color: #2563eb;
-            margin-bottom: 15px;
-            cursor: pointer;
-        }
-
-        .upload-button {
-            background-color: #2563eb;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .upload-button:hover {
-            background-color: #1d4ed8;
-        }
-    </style>
-</head>
-<body>
-
-<a href="{% url 'settings' %}" class="settings-link">&lt; Settings</a>
-
-<h1>My Profile</h1>
-
-<div class="grid">
-    <div class="flex space-x-4">      
-        {% for photo in photos %}
-            <div class="flex flex-col items-center">
-                <img src="{{ photo.image.url }}" alt="Photo" class="rounded-lg shadow-md w-32 h-48 object-cover">
-
-                {% if photo.is_main %}
-                    <span class="text-sm text-green-600 font-semibold mt-1">Main Photo</span>
-                {% endif %}
-
-                <!-- 刪除按鈕 -->
-                <form method="post" action="{% url 'delete_photo' photo.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="mt-1 px-3 py-1 bg-red-500 text-white rounded">Delete</button>
-                </form>
-
-                <!-- 設為主圖片按鈕-->             
-                <form method="post" action="{% url 'set_main_photo' photo.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="mt-1 px-3 py-1 bg-blue-500 text-white rounded">Set as Main</button>
-                </form>
-            </div>
-        {% endfor %}
-    </div>
+<!-- 返回設定 -->
+<div class="text-left px-6 pt-6">
+  <a href="{% url 'settings' %}" class="text-blue-600 font-semibold">&lt; Settings</a>
 </div>
 
-<form method="post" enctype="multipart/form-data" class="upload-form">
-    {% csrf_token %}
-    <label for="id_image" class="custom-file-upload">Choose File</label>
-    {{ form.image }}<br><br>
-    <button type="submit" class="upload-button">Upload</button>
-</form>
+<!-- 主容器 -->
+<div class="flex flex-col items-center justify-center px-6 py-4">
 
-</body>
-</html>
+  <!-- 主大頭貼（可點選打開選單） -->
+  <div class="my-4 relative">
+    {% if main_photo %}
+      <img src="{{ main_photo.image.url }}" id="avatar-trigger" class="rounded-full w-28 h-28 object-cover border-4 border-gray-300 shadow-md cursor-pointer" alt="Main Avatar">
+    {% else %}
+      <img src="{% static 'default-avatar.png' %}" id="avatar-trigger" class="rounded-full w-28 h-28 object-cover border-4 border-gray-300 shadow-md cursor-pointer" alt="Default Avatar">
+    {% endif %}
+
+    <!-- 選擇大頭貼下拉清單 -->
+    <div id="avatar-selector" class="hidden absolute top-32 left-1/2 -translate-x-1/2 bg-white border rounded shadow-md p-4 z-10 w-64">
+      <p class="text-sm font-semibold mb-2">Choose your profile picture:</p>
+      <div class="grid grid-cols-3 gap-2">
+        {% for photo in photos %}
+        <form method="post" action="{% url 'set_main_photo' photo.id %}">
+          {% csrf_token %}
+          <button type="submit">
+            <img src="{{ photo.image.url }}" class="w-16 h-16 object-cover rounded-full border hover:ring-2 ring-blue-400">
+          </button>
+        </form>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- 上傳圖片功能 -->
+  <form method="post" enctype="multipart/form-data" class="mb-6">
+    {% csrf_token %}
+    {{ form.image }}
+    <button type="submit" class="ml-2 px-4 py-1 bg-blue-500 text-white rounded">Upload</button>
+  </form>
+
+  <!-- 九宮格圖片 -->
+  <div class="grid grid-cols-3 gap-6 w-full max-w-4xl px-6">
+    {% for photo in photos %}
+      <div class="relative group">
+        <img src="{{ photo.image.url }}" class="w-full h-40 object-cover rounded-lg shadow-md">
+        <form method="post" action="{% url 'delete_photo' photo.id %}" class="absolute top-1 right-1">
+          {% csrf_token %}
+          <button type="submit" class="bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">✕</button>
+        </form>
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<!-- 點擊頭貼開關選單腳本 -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const trigger = document.getElementById('avatar-trigger');
+    const selector = document.getElementById('avatar-selector');
+
+    trigger.addEventListener('click', () => {
+      selector.classList.toggle('hidden');
+    });
+
+    // 點選選單以外的地方就關閉
+    document.addEventListener('click', function(event) {
+      if (!trigger.contains(event.target) && !selector.contains(event.target)) {
+        selector.classList.add('hidden');
+      }
+    });
+  });
+</script>
+
+{% endblock %}
