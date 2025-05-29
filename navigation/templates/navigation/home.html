@@ -1,45 +1,30 @@
-<!-- 第一層：navigation/templates/home.html -->
 {% extends 'base.html' %}
 {% block title %}Home{% endblock %}
 {% block content %}
 
-<!-- 主內容容器 -->
 <div class="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
-  <!-- 照片輪播區塊 -->
-  <div class="relative w-full max-w-3xl h-[50vh] overflow-hidden rounded-xl shadow-md">
-    <div id="photo-carousel" class="h-full w-full flex transition-transform duration-500 ease-in-out">
-      {% for photo in photos %}
-        <img src="{{ photo.image.url }}" class="h-full w-full object-cover flex-shrink-0" alt="user photo">
-      {% endfor %}
-    </div>
-    <!-- 左右切換按鈕 -->
-    <button onclick="moveSlide(-1)" class="absolute left-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white px-2 py-1 rounded">‹</button>
-    <button onclick="moveSlide(1)" class="absolute right-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white px-2 py-1 rounded">›</button>
-  </div>
+  <h2 class="text-2xl font-bold mb-4">Recommend</h2>
 
-  <!-- 使用者資訊 -->
-  <div class="flex items-center gap-4 mt-6">
-    {% if main_photo %}
-      <img src="{{ main_photo.image.url }}" class="rounded-full w-16 h-16 object-cover border-2 border-white shadow" alt="Main Avatar">
-    {% endif %}
-    <div class="text-left">
-      <h2 class="text-xl font-bold">{{ user.username }}</h2>
-      <p class="text-sm text-gray-500">Department</p>
-    </div>
-  </div>
+  {% if recommendations %}
+    {% for item in recommendations %}
+      <div class="bg-white shadow-md rounded-lg p-6 mb-6 w-full max-w-md text-center">
+        {% if item.photo %}
+          <img src="{{ item.photo.image.url }}" class="w-40 h-40 object-cover rounded-full mx-auto mb-4" alt="avatar">
+        {% else %}
+          <div class="w-40 h-40 bg-gray-300 rounded-full mx-auto mb-4"></div>
+        {% endif %}
+        <h3 class="text-xl font-semibold">{{ item.user.username }}</h3>
+        <p class="text-gray-500">Department</p>
+
+        <form method="post" action="{% url 'like_user' item.user.id %}" class="mt-4">
+          {% csrf_token %}
+          <button type="submit" class="bg-pink-500 text-white px-4 py-2 rounded-full hover:bg-pink-600">Like</button>
+        </form>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="text-gray-500 mt-10">目前沒有推薦的對象。</p>
+  {% endif %}
 </div>
-
-<!-- 輪播腳本 -->
-<script>
-  let currentIndex = 0;
-
-  function moveSlide(step) {
-    const carousel = document.getElementById('photo-carousel');
-    const photos = carousel.querySelectorAll('img');
-    const total = photos.length;
-    currentIndex = (currentIndex + step + total) % total;
-    carousel.style.transform = `translateX(-${currentIndex * 100}%)`;
-  }
-</script>
 
 {% endblock %}

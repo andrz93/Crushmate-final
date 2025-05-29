@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "chat",                 #new
     "settingsapp",          #new
     "profilepage",          #new
+    "match",
 ]
 
 SITE_ID = 1                     
