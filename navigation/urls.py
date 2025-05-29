@@ -7,4 +7,5 @@ urlpatterns = [
     path("chat/", include('chat.urls'), name="chat"),       #new
     path("settings/", include('settingsapp.urls'), name="settings"),        #new
     path("profilepage/", include('profilepage.urls'), name="profilepage"),
+    path("like/<int:user_id>/", views.like_user, name="like_user"),
 ]
