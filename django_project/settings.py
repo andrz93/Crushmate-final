@@ -52,6 +52,8 @@ INSTALLED_APPS = [
     "settingsapp",          #new
     "profilepage",          #new
     "match",
+    'rest_framework',
+    'rest_framework_simplejwt',
 ]
 
 SITE_ID = 1                     
@@ -175,3 +177,9 @@ DEFAULT_FROM_EMAIL = 'Crushmate <noreply.crushmate@gmail.com>'
 
 #用來同意使用此IP
 ALLOWED_HOSTS = ['*']
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+    }
