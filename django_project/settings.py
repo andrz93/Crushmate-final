@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     "match",
     'rest_framework',
     'rest_framework_simplejwt',
+    'course',
+    'bio',
 ]
 
 SITE_ID = 1                     

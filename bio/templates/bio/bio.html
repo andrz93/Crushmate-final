@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bio Settings{% endblock %}
+
+{% block content %}
+<!-- 返回設定 -->
+<div class="text-left px-6 pt-6">
+  <a href="{% url 'settings' %}" class="text-blue-600 font-semibold">&lt; Settings</a>
+</div>
+<!-- ✅ 自我介紹表單主要容器 -->
+<div class="max-w-3xl mx-auto p-6 bg-white rounded-2xl shadow-md mt-10">
+  <h2 class="text-2xl font-bold text-center text-gray-700 mb-6">Bio Settings</h2>
+
+  <form method="POST" class="space-y-5">
+    {% csrf_token %}
+
+    <!-- 自我介紹欄位 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-600">About Me</label>
+      <textarea name="bio" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500">{{ profile.bio }}</textarea>
+    </div>
+
+    <!-- 身高與體重欄位（並排） -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-600">Height (cm)</label>
+        <input type="number" name="height" value="{{ profile.height }}" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-600">Weight (kg)</label>
+        <input type="number" name="weight" value="{{ profile.weight }}" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500">
+      </div>
+    </div>
+
+    <!-- 系所欄位 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-600">Department</label>
+      <input type="text" name="department" value="{{ profile.department }}" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500">
+    </div>
+
+    <!-- 興趣標籤區塊 -->
+    <div>
+      <label class="block text-sm font-medium text-gray-600">Interests</label>
+      <div id="interest-list" class="flex flex-wrap gap-2 mt-2">
+        {% for interest in profile.interests %}
+          <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center">
+            {{ interest }}
+            <button type="button" onclick="removeInterest(this)" class="ml-2 text-blue-500 font-bold">&times;</button>
+          </span>
+        {% endfor %}
+      </div>
+      <!-- 新增興趣輸入列 -->
+      <div class="flex items-center mt-3 gap-2">
+        <input type="text" id="new-interest" placeholder="Add an interest" class="flex-1 px-3 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500">
+        <button type="button" onclick="addInterest()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Add</button>
+      </div>
+      <!-- 隱藏欄位送給後端 JSON 格式的興趣列表 -->
+      <input type="hidden" name="interests_list" id="interests_list">
+    </div>
+
+    <!-- 儲存按鈕 -->
+    <div class="text-center">
+      <button type="submit" onclick="syncInterests()" class="mt-6 px-6 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700">Save</button>
+    </div>
+  </form>
+</div>
+
+<!-- ✅ 興趣標籤的互動邏輯（新增、刪除、同步） -->
+<script>
+  function addInterest() {
+    const input = document.getElementById('new-interest');
+    const interest = input.value.trim();
+    if (interest) {
+      const tag = document.createElement('span');
+      tag.className = 'bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center';
+      tag.innerHTML = `${interest}<button type=\"button\" onclick=\"removeInterest(this)\" class=\"ml-2 text-blue-500 font-bold\">&times;</button>`;
+      document.getElementById('interest-list').appendChild(tag);
+      input.value = '';
+    }
+  }
+
+  function removeInterest(btn) {
+    btn.parentElement.remove();
+  }
+
+  function syncInterests() {
+    const tags = document.querySelectorAll('#interest-list span');
+    const result = [];
+    tags.forEach(tag => {
+      const text = tag.childNodes[0].nodeValue.trim();
+      result.push(text);
+    });
+    document.getElementById('interests_list').value = JSON.stringify(result);
+  }
+</script>
+{% endblock %}
