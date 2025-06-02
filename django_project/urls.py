@@ -30,5 +30,8 @@ urlpatterns = [
     path('home/', nav_views.homepage, name='home'),
     path('chat/', include('chat.urls')),
     path('match/', include('match.urls')),
+    #settings
+    path('settings/bio/', include('bio.urls')),
+    path('settings/course/', include('course.urls')),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

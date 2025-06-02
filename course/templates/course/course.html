@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load filters %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-10 bg-white rounded shadow-md p-6">
+    <h2 class="text-2xl font-bold text-center mb-6">Course Schedule</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+        <table class="w-full text-center border">
+            <thead>
+                <tr>
+                    <th class="w-1/6 border p-2">Time</th>
+                    <th class="w-1/6 border p-2">Mon</th>
+                    <th class="w-1/6 border p-2">Tue</th>
+                    <th class="w-1/6 border p-2">Wed</th>
+                    <th class="w-1/6 border p-2">Thu</th>
+                    <th class="w-1/6 border p-2">Fri</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for period in period_range %}
+                <tr>
+                    {% with hour=7|add:period %}
+                    <td class="border p-2 font-medium">{{ hour }}:00</td>
+                    {% endwith %}
+                    {% for day in days %}
+                    {% with key=day|stringformat:"s"|add:"_"|add:period|stringformat:"s" %}
+                    <td id="cell_{{ key }}" onclick="openModal({{ day }}, {{ period }})" class="border p-2 text-center cursor-pointer hover:bg-blue-50">
+                        <span id="label_{{ key }}">{{ table_data|get_cell:key }}</span>
+                    </td>
+                    {% endwith %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <input type="hidden" name="course_data" id="course_data">
+        <div class="text-center mt-4">
+            <button type="submit" onclick="prepareSubmit(); return true;" class="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700">Save Schedule</button>
+        </div>
+    </form>
+</div>
+
+<!-- Modal -->
+<div id="courseModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center">
+    <div class="bg-white p-6 rounded shadow-md w-80">
+        <h3 class="text-xl font-semibold mb-4">Add Course</h3>
+        <label class="block text-sm">Choose or enter course name:</label>
+        <select id="courseSelect" class="w-full border p-1 mt-1 mb-2"></select>
+        <input type="text" id="customCourseInput" class="w-full border p-1" placeholder="or enter a course name">
+        <div class="flex justify-end mt-4">
+            <button onclick="closeModal()" class="mr-2 px-3 py-1 bg-gray-300 rounded">Cancel</button>
+            <button onclick="saveCourse()" class="px-3 py-1 bg-blue-600 text-white rounded">Add</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let selectedDay = null;
+    let selectedPeriod = null;
+
+    function openModal(day, period) {
+        selectedDay = day;
+        selectedPeriod = period;
+        document.getElementById('customCourseInput').value = '';
+        document.getElementById('courseSelect').innerHTML = '<option>-- Choose existing --</option>';
+
+        fetch(`/settings/course/suggestions/?day=${day}&period=${period}`)
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = name;
+                    document.getElementById('courseSelect').appendChild(opt);
+                });
+                document.getElementById('courseModal').classList.remove('hidden');
+                document.getElementById('courseModal').classList.add('flex');
+            });
+    }
+
+    function closeModal() {
+        document.getElementById('courseModal').classList.add('hidden');
+        document.getElementById('courseModal').classList.remove('flex');
+    }
+
+    function saveCourse() {
+        const select = document.getElementById('courseSelect');
+        const input = document.getElementById('customCourseInput');
+        const courseName = input.value.trim() || select.value;
+        if (!courseName || courseName === '-- Choose existing --') return;
+        const key = `${selectedDay}_${selectedPeriod}`;
+        const label = document.getElementById(`label_${key}`);
+        if (label) {
+            label.innerText = courseName;
+        }
+        closeModal();
+    }
+
+    function prepareSubmit() {
+        const data = {};
+        document.querySelectorAll('[id^="label_"]').forEach(label => {
+            const key = label.id.replace('label_', '');
+            const value = label.innerText.trim();
+            if (value) {
+                data[key] = value;
+            }
+        });
+        document.getElementById('course_data').value = JSON.stringify(data);
+    }
+</script>
+{% endblock %}
