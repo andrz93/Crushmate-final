@@ -1,9 +1,9 @@
-# course/models.py
 from django.db import models
 from django.contrib.auth.models import User
 
-class CourseEntry(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    day = models.IntegerField()  # 0 = Mon
-    period = models.IntegerField()  # 1 ~ 9
-    course_name = models.CharField(max_length=100)
+class UserProfileSettings(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    course_schedule = models.JSONField(default=dict)
+
+    def __str__(self):
+        return f"{self.user.username}'s settings"
