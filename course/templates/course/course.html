@@ -1,114 +1,52 @@
 {% extends 'base.html' %}
-{% load filters %}
-{% block title %}My Course Schedule{% endblock %}
+{% load static %}
+{% load dict_extras %}  {# 我們會自定義這個 filter（如下） #}
+
+{% block title %}Course Schedule{% endblock %}
 
 {% block content %}
-<!-- 返回設定 -->
-<div class="text-left px-6 pt-6">
-  <a href="{% url 'settings' %}" class="text-blue-600 font-semibold">&lt; Settings</a>
-</div>
-
-<div class="max-w-6xl mx-auto mt-10 p-6 bg-white rounded-2xl shadow-xl">
-  <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">My Weekly Course Schedule</h2>
-
-  <form method="POST" onsubmit="return submitSchedule()">
+<div class="max-w-5xl mx-auto mt-10 bg-white rounded shadow-md p-6">
+  <h2 class="text-2xl font-bold text-center mb-6">Your Course Schedule</h2>
+  <form method="POST">
     {% csrf_token %}
-    <table class="border-collapse w-full text-center">
-      <thead class="bg-gray-100">
+    <table class="w-full text-center border">
+      <thead>
         <tr>
-          <th class="border border-gray-300 p-3 rounded-tl-2xl">Time</th>
+          <th class="border px-2 py-1">Time</th>
           {% for day in days %}
-            <th class="border border-gray-300 p-3">{{ day }}</th>
+            <th class="border px-2 py-1">{{ day }}</th>
           {% endfor %}
         </tr>
       </thead>
       <tbody>
-        {% for i in periods %}
-        <tr>
-          <td class="border border-gray-200 bg-gray-50 p-3 font-medium text-gray-600">{{ i }}</td>
-          {% for day in days %}
-          <td class="border border-gray-200">
-            <button type="button"
-              class="w-full h-12 flex items-center justify-center px-2 rounded-xl bg-white hover:bg-blue-100 cursor-pointer shadow-sm transition duration-200"
-              id="cell-{{ day }}-{{ i }}"
-              onclick="openModal('{{ day }}', {{ i }})">
-              {{ course_data|get_course_data:day|index:i|default:'' }}
-            </button>
-          </td>
-          {% endfor %}
-        </tr>
+        {% for period in periods %}
+          <tr>
+            <td class="border px-2 py-1">Period {{ period }}</td>
+            {% for day in days %}
+              <td class="border px-1 py-1">
+                <select name="{{ day }}-{{ period }}" class="w-full px-2 py-1 rounded border border-gray-300">
+                  <option value="">---</option>
+                  {% with selected_value=table|dict_get:day|dict_get:period %}
+                    {% for course in courses %}
+                      <option value="{{ course }}"
+                        {% if selected_value == course %}selected{% endif %}>
+                        {{ course }}
+                      </option>
+                    {% endfor %}
+                  {% endwith %}
+                </select>
+              </td>
+            {% endfor %}
+          </tr>
         {% endfor %}
       </tbody>
     </table>
-
-    <input type="hidden" name="course_schedule" id="course_schedule_input">
-
-    <div class="text-center mt-8 space-x-4">
-      <button type="submit" class="px-8 py-2 bg-green-600 text-white font-semibold rounded-full hover:bg-green-700 shadow">
-        Save
-      </button>
-      <button type="button" onclick="clearSchedule()" class="px-8 py-2 bg-red-500 text-white font-semibold rounded-full hover:bg-red-600 shadow">
-        Clear All
+    <div class="text-right mt-6">
+      <button type="submit"
+              class="px-6 py-2 bg-green-600 text-white font-semibold rounded hover:bg-green-700 transition">
+        Save Schedule
       </button>
     </div>
   </form>
 </div>
-
-<!-- Modal -->
-<div id="modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50">
-  <div class="bg-white rounded-xl shadow-lg p-6 w-80">
-    <h3 class="text-lg font-bold mb-4">Class</h3>
-    <input type="text" id="modal-input" class="w-full border rounded px-3 py-2 mb-4" placeholder="Course Name"
-           onkeydown="if(event.key === 'Enter'){ event.preventDefault(); saveModal(); }">
-    <div class="flex justify-end gap-3">
-      <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
-      <button type="button" onclick="saveModal()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
-    </div>
-  </div>
-</div>
-
-<script>
-  let currentDay = null;
-  let currentPeriod = null;
-
-  function openModal(day, period) {
-    currentDay = day;
-    currentPeriod = period;
-    const cell = document.getElementById(`cell-${day}-${period}`);
-    document.getElementById('modal-input').value = cell.textContent.trim();
-    document.getElementById('modal').classList.remove('hidden');
-  }
-
-  function closeModal() {
-    document.getElementById('modal').classList.add('hidden');
-  }
-
-  function saveModal() {
-    const value = document.getElementById('modal-input').value.trim();
-    const cell = document.getElementById(`cell-${currentDay}-${currentPeriod}`);
-    cell.textContent = value.replace(/\n/g, ' ');
-    closeModal();
-  }
-
-  function submitSchedule() {
-    const data = { "Mon": [], "Tue": [], "Wed": [], "Thu": [], "Fri": [] };
-    for (let i = 1; i <= 9; i++) {
-      for (let day of ["Mon", "Tue", "Wed", "Thu", "Fri"]) {
-        const val = document.getElementById(`cell-${day}-${i}`).textContent.trim();
-        data[day].push(val);
-      }
-    }
-    document.getElementById('course_schedule_input').value = JSON.stringify(data);
-    return true;
-  }
-
-  function clearSchedule() {
-    for (let i = 1; i <= 9; i++) {
-      for (let day of ["Mon", "Tue", "Wed", "Thu", "Fri"]) {
-        const cell = document.getElementById(`cell-${day}-${i}`);
-        if (cell) cell.textContent = "";
-      }
-    }
-  }
-</script>
 {% endblock %}

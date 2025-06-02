@@ -28,7 +28,7 @@ urlpatterns = [
     # Original page navigation links
     path('', include('navigation.urls')),
     path('home/', nav_views.home, name='home'),
-    path('chat/', include('chat.urls')),
+    path('chat/', include(('chat.urls', 'chat'), namespace='chat')),
     #settings
     path('settings/bio/', include('bio.urls')),
     path('settings/course/', include('course.urls')),

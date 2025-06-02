@@ -1,32 +1,36 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .models import UserProfileSettings
-import json
+from .models import UserCourseSchedule
+
+DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+PERIODS = range(1, 10)
+COURSE_OPTIONS = ['Math', 'German', 'English', 'Korean', 'Japanese']
 
 @login_required
 def course(request):
-    user_settings, created = UserProfileSettings.objects.get_or_create(user=request.user)
+    schedule_obj, _ = UserCourseSchedule.objects.get_or_create(user=request.user)
 
     if request.method == 'POST':
-        raw_data = request.POST.get('course_schedule', '{}')
-        user_settings.course_schedule = json.loads(raw_data)
-        user_settings.save()
+        schedule_data = {}
+        for day in DAYS:
+            for period in PERIODS:
+                key = f"{day}-{period}"
+                schedule_data[key] = request.POST.get(key, "")
+        schedule_obj.schedule = schedule_data
+        schedule_obj.save()
         return redirect('course')
 
-    # 建立 context，確保每天都有資料（預設為 9 節空白）
-    def get_day_data(day):
-        return user_settings.course_schedule.get(day, [""] * 9)
+    # ✅ 建立二維表格結構供 template 使用
+    table = {day: {} for day in DAYS}
+    for day in DAYS:
+        for period in PERIODS:
+            key = f"{day}-{period}"
+            table[day][period] = schedule_obj.schedule.get(key, "")
 
-    context = {
-    'days': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    'periods': range(1, 10),
-    'course_data': {
-        'Mon': get_day_data('Mon'),
-        'Tue': get_day_data('Tue'),
-        'Wed': get_day_data('Wed'),
-        'Thu': get_day_data('Thu'),
-        'Fri': get_day_data('Fri'),
-    }
-}
-
-    return render(request, 'course/course.html', context)
+    return render(request, 'course/course.html', {
+        'schedule': schedule_obj.schedule,
+        'table': table,
+        'days': DAYS,
+        'periods': PERIODS,
+        'courses': COURSE_OPTIONS,
+    })
