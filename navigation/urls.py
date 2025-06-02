@@ -1,11 +1,10 @@
 from django.urls import path, include
 from . import views
 
-
 urlpatterns = [
-    path("", views.homepage, name="home"),
-    path("chat/", include('chat.urls'), name="chat"),       #new
-    path("settings/", include('settingsapp.urls'), name="settings"),        #new
+    path("", views.home, name="home"),
+    path("chat/", include('chat.urls'), name="chat"),
+    path("settings/", include('settingsapp.urls'), name="settings"),
     path("profilepage/", include('profilepage.urls'), name="profilepage"),
-    path("like/<int:user_id>/", views.like_user, name="like_user"),
+    path("match/", include('match.urls', namespace='match')),
 ]

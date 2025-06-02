@@ -7,29 +7,106 @@
   <h1 class="text-3xl font-extrabold text-pink-600">Crushmate</h1>
 </div>
 
+<!-- 主內容容器 -->
 <div class="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
-  <h2 class="text-2xl font-bold mb-4">Recommend</h2>
 
   {% if recommendations %}
-    {% for item in recommendations %}
-      <div class="bg-white shadow-md rounded-lg p-6 mb-6 w-full max-w-md text-center">
-        {% if item.photo %}
-          <img src="{{ item.photo.image.url }}" class="w-40 h-40 object-cover rounded-full mx-auto mb-4" alt="avatar">
-        {% else %}
-          <div class="w-40 h-40 bg-gray-300 rounded-full mx-auto mb-4"></div>
-        {% endif %}
-        <h3 class="text-xl font-semibold">{{ item.user.username }}</h3>
-        <p class="text-gray-500">Department</p>
+    <div id="card-container" class="relative w-full max-w-md h-[60vh] flex items-center justify-center">
 
-        <form method="post" action="{% url 'like_user' item.user.id %}" class="mt-4">
-          {% csrf_token %}
-          <button type="submit" class="bg-pink-500 text-white px-4 py-2 rounded-full hover:bg-pink-600">Like</button>
-        </form>
-      </div>
-    {% endfor %}
+      {% for rec in recommendations %}
+        <div class="card absolute w-full h-full bg-white rounded-xl shadow-lg transition-all duration-500 ease-in-out transform scale-100"
+             data-username="{{ rec.user.username }}"
+             data-photo-id="{{ rec.photo.id }}"
+             style="{% if not forloop.first %}display: none;{% endif %}">
+
+          {% if rec.photo %}
+            <img src="{{ rec.photo.image.url }}" alt="Profile Photo"
+                 class="w-full h-4/5 object-cover rounded-t-xl">
+          {% else %}
+            <div class="w-full h-4/5 bg-gray-300 rounded-t-xl"></div>
+          {% endif %}
+
+          <div class="p-4 text-center">
+            <h2 class="text-xl font-bold">{{ rec.user.username }}</h2>
+            <p class="text-gray-500">Department</p>
+          </div>
+        </div>
+      {% endfor %}
+
+    </div>
+
+    <!-- 控制按鈕 -->
+    <div class="flex gap-6 mt-6">
+      <button onclick="swipe('left')" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-full shadow">👎 不喜歡</button>
+      <button onclick="swipe('right')" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full shadow">👍 喜歡</button>
+    </div>
   {% else %}
-    <p class="text-gray-500 mt-10">目前沒有推薦的對象。</p>
+    <p class="text-gray-600 text-lg">暫時沒有推薦對象喔！</p>
   {% endif %}
+
+    <!-- Match 提示彈窗 -->
+    <div id="match-popup" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+        <h2 class="text-3xl font-bold text-pink-600 mb-4">🎉 It's a Match! 🎉</h2>
+        <p class="text-gray-700 mb-4">你和 <span id="match-username"></span> 互相喜歡了！</p>
+        <button onclick="closeMatchPopup()" class="bg-pink-500 text-white px-6 py-2 rounded-full">太好了</button>
+      </div>
+    </div>
+
+
 </div>
+
+<!-- Swipe 控制腳本 -->
+<script>
+  let currentCardIndex = 0;
+  const cards = document.querySelectorAll('.card');
+
+  function swipe(direction) {
+    if (currentCardIndex >= cards.length) return;
+
+    const currentCard = cards[currentCardIndex];
+    const photoId = currentCard.dataset.photoId;
+    const username = currentCard.dataset.username;
+
+    // 將滑動結果送到後端
+    fetch("{% url 'match:swipe' %}", {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        direction: direction,
+        photo_id: photoId,
+        username: username
+      })
+    }).then(response => response.json())
+      .then(data => {
+        if (data.status === 'match') {
+          showMatchPopup(username);
+        }
+      });
+
+    // 切換下一張卡片
+    currentCard.style.opacity = 0;
+    setTimeout(() => {
+      currentCard.style.display = 'none';
+      currentCardIndex++;
+      if (currentCardIndex < cards.length) {
+        cards[currentCardIndex].style.display = 'block';
+      }
+    }, 300);
+  }
+
+  function showMatchPopup(username) {
+    document.getElementById('match-username').innerText = username;
+    document.getElementById('match-popup').classList.remove('hidden');
+  }
+
+  function closeMatchPopup() {
+    document.getElementById('match-popup').classList.add('hidden');
+  }
+</script>
+
 
 {% endblock %}
