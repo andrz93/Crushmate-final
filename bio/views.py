@@ -20,3 +20,4 @@ def bio_settings(request):
         return redirect('settings')
 
     return render(request, 'bio/bio.html', {'profile': profile})
+
