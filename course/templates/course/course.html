@@ -1,115 +1,114 @@
 {% extends 'base.html' %}
-{% load static %}
 {% load filters %}
+{% block title %}My Course Schedule{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto mt-10 bg-white rounded shadow-md p-6">
-    <h2 class="text-2xl font-bold text-center mb-6">Course Schedule</h2>
+<!-- 返回設定 -->
+<div class="text-left px-6 pt-6">
+  <a href="{% url 'settings' %}" class="text-blue-600 font-semibold">&lt; Settings</a>
+</div>
 
-    <form method="POST">
-        {% csrf_token %}
-        <table class="w-full text-center border">
-            <thead>
-                <tr>
-                    <th class="w-1/6 border p-2">Time</th>
-                    <th class="w-1/6 border p-2">Mon</th>
-                    <th class="w-1/6 border p-2">Tue</th>
-                    <th class="w-1/6 border p-2">Wed</th>
-                    <th class="w-1/6 border p-2">Thu</th>
-                    <th class="w-1/6 border p-2">Fri</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for period in period_range %}
-                <tr>
-                    {% with hour=7|add:period %}
-                    <td class="border p-2 font-medium">{{ hour }}:00</td>
-                    {% endwith %}
-                    {% for day in days %}
-                    {% with key=day|stringformat:"s"|add:"_"|add:period|stringformat:"s" %}
-                    <td id="cell_{{ key }}" onclick="openModal({{ day }}, {{ period }})" class="border p-2 text-center cursor-pointer hover:bg-blue-50">
-                        <span id="label_{{ key }}">{{ table_data|get_cell:key }}</span>
-                    </td>
-                    {% endwith %}
-                    {% endfor %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div class="max-w-6xl mx-auto mt-10 p-6 bg-white rounded-2xl shadow-xl">
+  <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">My Weekly Course Schedule</h2>
 
-        <input type="hidden" name="course_data" id="course_data">
-        <div class="text-center mt-4">
-            <button type="submit" onclick="prepareSubmit(); return true;" class="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700">Save Schedule</button>
-        </div>
-    </form>
+  <form method="POST" onsubmit="return submitSchedule()">
+    {% csrf_token %}
+    <table class="border-collapse w-full text-center">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="border border-gray-300 p-3 rounded-tl-2xl">節次</th>
+          {% for day in days %}
+            <th class="border border-gray-300 p-3">{{ day }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in periods %}
+        <tr>
+          <td class="border border-gray-200 bg-gray-50 p-3 font-medium text-gray-600">{{ i }}</td>
+          {% for day in days %}
+          <td class="border border-gray-200">
+            <button type="button"
+              class="w-full h-12 flex items-center justify-center px-2 rounded-xl bg-white hover:bg-blue-100 cursor-pointer shadow-sm transition duration-200"
+              id="cell-{{ day }}-{{ i }}"
+              onclick="openModal('{{ day }}', {{ i }})">
+              {{ course_data|get_course_data:day|index:i|default:'' }}
+            </button>
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <input type="hidden" name="course_schedule" id="course_schedule_input">
+
+    <div class="text-center mt-8 space-x-4">
+      <button type="submit" class="px-8 py-2 bg-green-600 text-white font-semibold rounded-full hover:bg-green-700 shadow">
+        Save
+      </button>
+      <button type="button" onclick="clearSchedule()" class="px-8 py-2 bg-red-500 text-white font-semibold rounded-full hover:bg-red-600 shadow">
+        Clear All
+      </button>
+    </div>
+  </form>
 </div>
 
 <!-- Modal -->
-<div id="courseModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center">
-    <div class="bg-white p-6 rounded shadow-md w-80">
-        <h3 class="text-xl font-semibold mb-4">Add Course</h3>
-        <label class="block text-sm">Choose or enter course name:</label>
-        <select id="courseSelect" class="w-full border p-1 mt-1 mb-2"></select>
-        <input type="text" id="customCourseInput" class="w-full border p-1" placeholder="or enter a course name">
-        <div class="flex justify-end mt-4">
-            <button onclick="closeModal()" class="mr-2 px-3 py-1 bg-gray-300 rounded">Cancel</button>
-            <button onclick="saveCourse()" class="px-3 py-1 bg-blue-600 text-white rounded">Add</button>
-        </div>
+<div id="modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50">
+  <div class="bg-white rounded-xl shadow-lg p-6 w-80">
+    <h3 class="text-lg font-bold mb-4">輸入課程名稱</h3>
+    <input type="text" id="modal-input" class="w-full border rounded px-3 py-2 mb-4" placeholder="Course Name"
+           onkeydown="if(event.key === 'Enter'){ event.preventDefault(); saveModal(); }">
+    <div class="flex justify-end gap-3">
+      <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">取消</button>
+      <button type="button" onclick="saveModal()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">儲存</button>
     </div>
+  </div>
 </div>
 
 <script>
-    let selectedDay = null;
-    let selectedPeriod = null;
+  let currentDay = null;
+  let currentPeriod = null;
 
-    function openModal(day, period) {
-        selectedDay = day;
-        selectedPeriod = period;
-        document.getElementById('customCourseInput').value = '';
-        document.getElementById('courseSelect').innerHTML = '<option>-- Choose existing --</option>';
+  function openModal(day, period) {
+    currentDay = day;
+    currentPeriod = period;
+    const cell = document.getElementById(`cell-${day}-${period}`);
+    document.getElementById('modal-input').value = cell.textContent.trim();
+    document.getElementById('modal').classList.remove('hidden');
+  }
 
-        fetch(`/settings/course/suggestions/?day=${day}&period=${period}`)
-            .then(res => res.json())
-            .then(data => {
-                data.forEach(name => {
-                    const opt = document.createElement('option');
-                    opt.value = name;
-                    opt.textContent = name;
-                    document.getElementById('courseSelect').appendChild(opt);
-                });
-                document.getElementById('courseModal').classList.remove('hidden');
-                document.getElementById('courseModal').classList.add('flex');
-            });
+  function closeModal() {
+    document.getElementById('modal').classList.add('hidden');
+  }
+
+  function saveModal() {
+    const value = document.getElementById('modal-input').value.trim();
+    const cell = document.getElementById(`cell-${currentDay}-${currentPeriod}`);
+    cell.textContent = value.replace(/\n/g, ' ');
+    closeModal();
+  }
+
+  function submitSchedule() {
+    const data = { "Mon": [], "Tue": [], "Wed": [], "Thu": [], "Fri": [] };
+    for (let i = 1; i <= 9; i++) {
+      for (let day of ["Mon", "Tue", "Wed", "Thu", "Fri"]) {
+        const val = document.getElementById(`cell-${day}-${i}`).textContent.trim();
+        data[day].push(val);
+      }
     }
+    document.getElementById('course_schedule_input').value = JSON.stringify(data);
+    return true;
+  }
 
-    function closeModal() {
-        document.getElementById('courseModal').classList.add('hidden');
-        document.getElementById('courseModal').classList.remove('flex');
+  function clearSchedule() {
+    for (let i = 1; i <= 9; i++) {
+      for (let day of ["Mon", "Tue", "Wed", "Thu", "Fri"]) {
+        const cell = document.getElementById(`cell-${day}-${i}`);
+        if (cell) cell.textContent = "";
+      }
     }
-
-    function saveCourse() {
-        const select = document.getElementById('courseSelect');
-        const input = document.getElementById('customCourseInput');
-        const courseName = input.value.trim() || select.value;
-        if (!courseName || courseName === '-- Choose existing --') return;
-        const key = `${selectedDay}_${selectedPeriod}`;
-        const label = document.getElementById(`label_${key}`);
-        if (label) {
-            label.innerText = courseName;
-        }
-        closeModal();
-    }
-
-    function prepareSubmit() {
-        const data = {};
-        document.querySelectorAll('[id^="label_"]').forEach(label => {
-            const key = label.id.replace('label_', '');
-            const value = label.innerText.trim();
-            if (value) {
-                data[key] = value;
-            }
-        });
-        document.getElementById('course_data').value = JSON.stringify(data);
-    }
+  }
 </script>
 {% endblock %}
