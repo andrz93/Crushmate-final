@@ -3,20 +3,18 @@ from django.contrib.auth.models import User
 
 # 使用者對其他使用者按讚的紀錄
 class Like(models.Model):
-    from_user = models.ForeignKey(
-        User, related_name='likes_given', on_delete=models.CASCADE
-    )
-    to_user = models.ForeignKey(
-        User, related_name='likes_received', on_delete=models.CASCADE
-    )
+    from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='likes_given')
+    to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='likes_received')
+    is_liked = models.BooleanField(default=True)  # ← 加上這一行
     timestamp = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        unique_together = ('from_user', 'to_user')  # 防止重複讚
-        ordering = ['-timestamp']  # 最新的 like 在前
-
     def __str__(self):
-        return f"{self.from_user.username} ➡️ {self.to_user.username}"
+        return f"{self.from_user} -> {self.to_user} ({'Liked' if self.is_liked else 'Disliked'})"
+    
+
+
+
+   
 
 # 雙方互讚後建立的配對
 class Match(models.Model):

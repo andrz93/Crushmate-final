@@ -1,28 +1,46 @@
-from django.shortcuts import redirect, get_object_or_404
+# match/views.py
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from django.contrib.auth.models import User
 from .models import Like, Match
-from django.db.models import Q
+import json
 
+@csrf_exempt
+@require_POST
 @login_required
-def like_user(request, user_id):
-    to_user = get_object_or_404(User, id=user_id)
-    from_user = request.user
+def swipe(request):
+    data = json.loads(request.body)
+    direction = data.get('direction')
+    username = data.get('username')
 
-    # 如果已經按過 Like，就不要重複建立
-    like, created = Like.objects.get_or_create(from_user=from_user, to_user=to_user)
+    try:
+        to_user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
 
-    # 檢查對方是否也按過你（形成 Match）
-    if Like.objects.filter(from_user=to_user, to_user=from_user).exists():
-        # 如果還沒建立 Match，就建立
-        match_exists = Match.objects.filter(
-            (Q(user1=from_user) & Q(user2=to_user)) | (Q(user1=to_user) & Q(user2=from_user))
+    is_liked = (direction == 'right')
+
+    # 儲存 Like（會更新重複的記錄）
+    like_obj, _ = Like.objects.update_or_create(
+        from_user=request.user,
+        to_user=to_user,
+        defaults={'is_liked': is_liked}
+    )
+
+    if is_liked:
+        # 檢查是否雙向 Like 成功
+        mutual_like = Like.objects.filter(
+            from_user=to_user,
+            to_user=request.user,
+            is_liked=True
         ).exists()
-        if not match_exists:
-            Match.objects.create(user1=from_user, user2=to_user)
 
-        # 自動導向聊天室（你要確保 chat_room URL name 有設定）
-        return redirect('chat_room', username=to_user.username)
+        if mutual_like:
+            # 用 user id 排序來避免重複
+            user1, user2 = sorted([request.user, to_user], key=lambda u: u.id)
+            Match.objects.get_or_create(user1=user1, user2=user2)
+            return JsonResponse({'status': 'match'})
 
-    # 如果對方還沒按 like，就回到主頁面
-    return redirect('home')
+    return JsonResponse({'status': 'ok'})
