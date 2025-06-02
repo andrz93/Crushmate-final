@@ -5,6 +5,7 @@ from django.http import HttpResponseForbidden
 from .models import Message
 from match.models import Match
 from django.contrib.auth.models import User
+from profilepage.models import ProfilePhoto
 
 @login_required
 def chat_room(request, username):
@@ -41,8 +42,13 @@ def user_list(request):
     matches = Match.objects.filter(
         Q(user1=request.user) | Q(user2=request.user)
     )
-    matched_users = [
-        match.user2 if match.user1 == request.user else match.user1
-        for match in matches
-    ]
+    matched_users = []
+    for match in matches:
+        user = match.user2 if match.user1 == request.user else match.user1
+        main_photo = ProfilePhoto.objects.filter(user=user, is_main=True).first()
+        matched_users.append({
+            'user': user,
+            'main_photo': main_photo
+        })
+
     return render(request, "chat/user_list.html", {"users": matched_users})

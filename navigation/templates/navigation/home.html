@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Home{% endblock %}
-{% block content %}
 
+{% block content %}
 <!-- Logo 區塊 -->
 <div class="w-full text-center py-4 bg-gray-100">
   <h1 class="text-3xl font-extrabold text-pink-600">Crushmate</h1>
@@ -9,77 +9,85 @@
 
 <!-- 主內容容器 -->
 <div class="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
-
   {% if recommendations %}
-    <div id="card-container" class="relative w-full max-w-md h-[60vh] flex items-center justify-center">
-
+    <div id="card-container" class="relative w-full max-w-3xl flex items-center justify-center">
       {% for rec in recommendations %}
-        <div class="card absolute w-full h-full bg-white rounded-xl shadow-lg transition-all duration-500 ease-in-out transform scale-100"
+        {% with forloop.counter0 as index %}
+        <div class="card w-full bg-white rounded-xl shadow-lg transition-all duration-500 ease-in-out transform scale-100 overflow-hidden"
              data-username="{{ rec.user.username }}"
-             data-photo-id="{{ rec.photo.id }}"
+             data-photo-id="{{ rec.main_photo.id }}"
              style="{% if not forloop.first %}display: none;{% endif %}">
 
-          {% if rec.photo %}
-            <img src="{{ rec.photo.image.url }}" alt="Profile Photo"
-                 class="w-full h-4/5 object-cover rounded-t-xl">
-          {% else %}
-            <div class="w-full h-4/5 bg-gray-300 rounded-t-xl"></div>
-          {% endif %}
+          <!-- 上方相簿（單張照片顯示，有左右箭頭） -->
+          <div class="relative w-full h-96 bg-gray-200 flex items-center justify-center">
+            <button class="absolute left-0 text-gray-500 hover:text-pink-600 text-3xl px-3" onclick="prevPhoto({{ index }})">&#10094;</button>
+            <div class="w-full h-full flex items-center justify-center">
+              {% for photo in rec.other_photos %}
+                <img src="{{ photo.image.url }}" alt="Extra Photo"
+                     class="carousel-photo-{{ index }} w-full h-full object-cover"
+                     style="display: {% if forloop.first %}block{% else %}none{% endif %};">
+              {% endfor %}
+            </div>
+            <button class="absolute right-0 text-gray-500 hover:text-pink-600 text-3xl px-3" onclick="nextPhoto({{ index }})">&#10095;</button>
+          </div>
 
-          <div class="p-4 text-center">
-            <h2 class="text-xl font-bold">{{ rec.user.username }}</h2>
-            <p class="text-gray-500">Department</p>
+          <!-- 下方資訊區（主照片 + 資料） -->
+          <div class="flex items-center gap-6 px-6 py-6 bg-white">
+            {% if rec.main_photo %}
+              <img src="{{ rec.main_photo.image.url }}" alt="Main Photo"
+                   class="w-24 h-24 rounded-full object-cover border-2 border-pink-500 shadow">
+            {% else %}
+              <div class="w-24 h-24 rounded-full bg-gray-300"></div>
+            {% endif %}
+            <div>
+              <h2 class="text-2xl font-bold text-gray-800">{{ rec.user.username }}</h2>
+              <p class="text-base text-gray-500">{{ rec.department|default:"No department" }}</p>
+              <p class="text-base text-gray-700 mt-2 max-w-[400px] break-words">{{ rec.bio|default:"No bio yet." }}</p>
+            </div>
           </div>
         </div>
+        {% endwith %}
       {% endfor %}
-
     </div>
 
     <!-- 控制按鈕 -->
     <div class="flex gap-6 mt-6">
-      <button onclick="swipe('left')" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-full shadow">👎 不喜歡</button>
-      <button onclick="swipe('right')" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full shadow">👍 喜歡</button>
+      <button onclick="swipe('left')" class="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-full shadow">👎 Unlike</button>
+      <button onclick="swipe('right')" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-full shadow">👍 Like</button>
     </div>
   {% else %}
-    <p class="text-gray-600 text-lg">暫時沒有推薦對象喔！</p>
+    <p class="text-gray-600 text-lg">No recommends！</p>
   {% endif %}
 
-    <!-- Match 提示彈窗 -->
-    <div id="match-popup" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-xl shadow-lg p-8 text-center">
-        <h2 class="text-3xl font-bold text-pink-600 mb-4">🎉 It's a Match! 🎉</h2>
-        <p class="text-gray-700 mb-4">你和 <span id="match-username"></span> 互相喜歡了！</p>
-        <button onclick="closeMatchPopup()" class="bg-pink-500 text-white px-6 py-2 rounded-full">太好了</button>
-      </div>
+  <!-- Match 提示彈窗 -->
+  <div id="match-popup" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+      <h2 class="text-3xl font-bold text-pink-600 mb-4">🎉 It's a Match! 🎉</h2>
+      <p class="text-gray-700 mb-4">你和 <span id="match-username"></span> 互相喜歡了！</p>
+      <button onclick="closeMatchPopup()" class="bg-pink-500 text-white px-6 py-2 rounded-full">太好了</button>
     </div>
-
-
+  </div>
 </div>
 
-<!-- Swipe 控制腳本 -->
+<!-- 控制腳本 -->
 <script>
   let currentCardIndex = 0;
   const cards = document.querySelectorAll('.card');
+  const photoIndexes = {};
 
   function swipe(direction) {
     if (currentCardIndex >= cards.length) return;
-
     const currentCard = cards[currentCardIndex];
     const photoId = currentCard.dataset.photoId;
     const username = currentCard.dataset.username;
 
-    // 將滑動結果送到後端
     fetch("{% url 'match:swipe' %}", {
       method: 'POST',
       headers: {
         'X-CSRFToken': '{{ csrf_token }}',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        direction: direction,
-        photo_id: photoId,
-        username: username
-      })
+      body: JSON.stringify({ direction, photo_id: photoId, username })
     }).then(response => response.json())
       .then(data => {
         if (data.status === 'match') {
@@ -87,7 +95,6 @@
         }
       });
 
-    // 切換下一張卡片
     currentCard.style.opacity = 0;
     setTimeout(() => {
       currentCard.style.display = 'none';
@@ -106,7 +113,21 @@
   function closeMatchPopup() {
     document.getElementById('match-popup').classList.add('hidden');
   }
+
+  function nextPhoto(index) {
+    const photos = document.querySelectorAll(`.carousel-photo-${index}`);
+    if (!(index in photoIndexes)) photoIndexes[index] = 0;
+    photos[photoIndexes[index]].style.display = 'none';
+    photoIndexes[index] = (photoIndexes[index] + 1) % photos.length;
+    photos[photoIndexes[index]].style.display = 'block';
+  }
+
+  function prevPhoto(index) {
+    const photos = document.querySelectorAll(`.carousel-photo-${index}`);
+    if (!(index in photoIndexes)) photoIndexes[index] = 0;
+    photos[photoIndexes[index]].style.display = 'none';
+    photoIndexes[index] = (photoIndexes[index] - 1 + photos.length) % photos.length;
+    photos[photoIndexes[index]].style.display = 'block';
+  }
 </script>
-
-
 {% endblock %}
