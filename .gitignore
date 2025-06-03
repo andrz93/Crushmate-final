@@ -13,5 +13,7 @@ db.sqlite3
 
 # 忽略 VSCode 設定檔（如果你有用）
 .vscode/
-#不要上傳media的圖片
+# 忽略 profile_photos 資料夾裡的所有內容
 media/profile_photos/*
+# 但保留資料夾本身（若你想保留 .gitkeep 這類空檔案）
+!media/profile_photos/.gitkeep
