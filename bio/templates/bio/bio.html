@@ -1,3 +1,4 @@
+<!-- bio/templates/bio.html (這個是按鈕2: Profile) -->
 {% extends 'base.html' %}
 {% load static %}
 
@@ -9,31 +10,14 @@
   <a href="{% url 'settings' %}" class="text-blue-600 font-semibold">&lt; Settings</a>
 </div>
 
-
 <!-- 表單主體 -->
-<div class="max-w-4xl mx-auto p-8 bg-white rounded-2xl shadow-xl mt-10">
-  <h2 class="text-3xl font-extrabold text-center text-gray-800 mb-10">{{ request.user.username }} !Edit Your Profile</h2>
+<div class="max-w-2xl mx-auto mt-8 px-6">
+  <div class="bg-white rounded-xl shadow-md p-8">
+    <h2 class="text-3xl font-extrabold text-center text-gray-800 mb-8">Edit Your Profile</h2>
 
+    <form method="POST" enctype="multipart/form-data" class="space-y-6" id="bio-form">
+      {% csrf_token %}
 
-  <form method="POST" enctype="multipart/form-data" class="grid md:grid-cols-3 gap-8 items-start" id="bio-form">
-    {% csrf_token %}
-
-    <!-- 左側：頭像 -->
-    <div class="col-span-1 flex flex-col items-center space-y-3">
-      <a href="{% url 'profilepage' %}" class="relative group block">
-        <img
-          src="{{ main_photo.image.url|default:'https://via.placeholder.com/200x200.png?text=Upload+Photo' }}"
-          alt="Profile Photo"
-          class="w-40 h-40 rounded-xl object-cover border border-gray-300 shadow-md hover:opacity-80 transition"
-        >
-        <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-50 text-white text-center text-sm py-1 rounded-b-xl opacity-0 group-hover:opacity-100 transition">
-          前往個人頁面
-        </div>
-      </a>
-    </div>
-
-    <!-- 右側：資料欄位 -->
-    <div class="col-span-2 space-y-6">
       <!-- 自我介紹 -->
       <div>
         <label class="block text-base font-semibold text-gray-700 mb-2">Bio</label>
@@ -42,7 +26,7 @@
       </div>
 
       <!-- 身高與體重 -->
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-2 gap-6">
         <div>
           <label class="block text-base font-semibold text-gray-700 mb-2">Height (cm)</label>
           <input type="number" name="height" value="{{ profile.height }}"
@@ -61,59 +45,36 @@
         <input type="text" name="department" value="{{ profile.department|default_if_none:"" }}"
           class="prevent-enter w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 shadow-sm">
       </div>
-        <!-- 興趣區（固定選項） -->
-         
+
+      <!-- 興趣區 -->
       <div>
         <label class="block text-base font-semibold text-gray-700 mb-2">Interest</label>
-          <select name="interest"
-            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 shadow-sm">
-            {% for option in interest_choices %}
-          <option value="{{ option }}" {% if option in profile.interests %}selected{% endif %}>{{ option }}</option>
-        {% endfor %}
+        <select name="interest"
+          class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 shadow-sm">
+          {% for option in interest_choices %}
+            <option value="{{ option }}" {% if option in profile.interests %}selected{% endif %}>{{ option }}</option>
+          {% endfor %}
         </select>
       </div>
 
-      <!-- 儲存 -->
-      <div class="text-right pt-6">
+      <!-- 儲存按鈕 -->
+      <div class="text-right pt-4">
         <button type="submit" onclick="syncInterests()"
           class="px-6 py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition shadow-md">
           Save Profile
         </button>
       </div>
-    </div>
-  </form>
+    </form>
+  </div>
 </div>
 
-<!--  JS 互動區 -->
+<!-- JS 互動區 -->
 <script>
   document.querySelectorAll('.prevent-enter').forEach(input => {
     input.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') e.preventDefault();
     });
   });
-
-  document.getElementById('new-interest').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addInterest();
-    }
-  });
-
-  function addInterest() {
-    const input = document.getElementById('new-interest');
-    const interest = input.value.trim();
-    if (interest) {
-      const tag = document.createElement('span');
-      tag.className = 'bg-blue-100 text-blue-800 px-4 py-1 rounded-full text-sm font-medium flex items-center shadow-sm';
-      tag.innerHTML = `${interest}<button type="button" onclick="removeInterest(this)" class="ml-2 text-blue-600 font-bold hover:text-red-500 transition">&times;</button>`;
-      document.getElementById('interest-list').appendChild(tag);
-      input.value = '';
-    }
-  }
-
-  function removeInterest(btn) {
-    btn.parentElement.remove();
-  }
 
   function syncInterests() {
     const tags = document.querySelectorAll('#interest-list span');
