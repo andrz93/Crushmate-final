@@ -14,5 +14,4 @@ db.sqlite3
 # 忽略 VSCode 設定檔（如果你有用）
 .vscode/
 #不要上傳media的圖片
-media/**/*.jpg
-media/**/*.png
+media/profile_photos/*
