@@ -6,7 +6,7 @@ __pycache__/
 *.pyc
 
 # 忽略 SQLite 資料庫（如果你不想上傳）
-db.sqlite3
+#db.sqlite3
 
 # 忽略環境變數設定檔
 .env
