@@ -9,26 +9,32 @@ def profile_page(request):
     if request.method == 'POST':
         form = PhotoForm(request.POST, request.FILES)
         if form.is_valid():
-            # 加入：如果照片已滿 9 張，就不讓使用者上傳
+            # 限制最多 9 張
             photo_count = ProfilePhoto.objects.filter(user=request.user).count()
             if photo_count >= 9:
                 from django.contrib import messages
                 messages.error(request, "Maximum: 9 photos")
                 return redirect('profilepage')
-            
-            #這邊是原本的程式
+
+            # 上傳並自動設成主圖（如果目前還沒有 main）
             image = form.cleaned_data['image']
-            existing_main = ProfilePhoto.objects.filter(user=request.user, is_main=True).exists()    
-            photo = ProfilePhoto.objects.create(user=request.user, image=image)   
-            if not existing_main:           
-                photo.is_main = True        
+            existing_main = ProfilePhoto.objects.filter(user=request.user, is_main=True).exists()
+            photo = ProfilePhoto.objects.create(user=request.user, image=image)
+            if not existing_main:
+                photo.is_main = True
                 photo.save()
             return redirect('profilepage')
     else:
         form = PhotoForm()
 
     photos = ProfilePhoto.objects.filter(user=request.user)
-    return render(request, 'profilepage/profilepage.html', {'form': form, 'photos': photos})
+    main_photo = photos.filter(is_main=True).first() or photos.first()  # 自動抓第一張當作主圖 fallback
+
+    return render(request, 'profilepage/profilepage.html', {
+        'form': form,
+        'photos': photos,
+        'main_photo': main_photo
+    })
 
 def delete_photo(request, photo_id):
     photo = get_object_or_404(ProfilePhoto, id=photo_id, user=request.user)
