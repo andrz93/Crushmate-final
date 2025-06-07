@@ -7,6 +7,7 @@ from match.models import Match
 from django.contrib.auth.models import User
 from profilepage.models import ProfilePhoto
 
+
 @login_required
 def chat_room(request, username):
     recipient = get_object_or_404(User, username=username)

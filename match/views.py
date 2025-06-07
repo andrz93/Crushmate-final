@@ -4,8 +4,11 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.contrib.auth.models import User
-from .models import Like, Match
+from .models import Match, Like, UnmatchRecord
 import json
+from django.db.models import Q
+from django.shortcuts import get_object_or_404, redirect
+
 
 @csrf_exempt
 @require_POST
@@ -44,3 +47,24 @@ def swipe(request):
             return JsonResponse({'status': 'match'})
 
     return JsonResponse({'status': 'ok'})
+
+@login_required
+def unmatch_view(request, username):
+    to_user = get_object_or_404(User, username=username)
+
+    # 刪除配對
+    match = Match.objects.filter(
+        Q(user1=request.user, user2=to_user) | Q(user1=to_user, user2=request.user)
+    ).first()
+    if match:
+        match.delete()
+
+    # 刪除 Like
+    Like.objects.filter(from_user=request.user, to_user=to_user).delete()
+    Like.objects.filter(from_user=to_user, to_user=request.user).delete()
+
+    # 新增 Unmatch 紀錄
+    UnmatchRecord.objects.get_or_create(user=request.user, unmatched_user=to_user)
+    UnmatchRecord.objects.get_or_create(user=to_user, unmatched_user=request.user)
+
+    return redirect('user_list')  # 或 chat list/home

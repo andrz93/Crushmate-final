@@ -19,7 +19,12 @@
       <h2 class="text-xl font-bold text-pink-600 mx-auto">{{ recipient.username }}</h2>
 
       <!-- 用空白 div 佔右側空間以對稱 -->
-      <div class="w-24"></div>
+  <a href="{% url 'match:unmatch' recipient.username %}"
+     class="text-red-600 text-sm hover:underline"
+     onclick="return confirm('Are you sure you want to unmatch this user?');">
+    ❌ Unmatch
+  </a>
+</div>
     </header>
 
   <!--  聊天訊息區塊（主體） -->

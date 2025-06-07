@@ -10,11 +10,6 @@ class Like(models.Model):
 
     def __str__(self):
         return f"{self.from_user} -> {self.to_user} ({'Liked' if self.is_liked else 'Disliked'})"
-    
-
-
-
-   
 
 # 雙方互讚後建立的配對
 class Match(models.Model):
@@ -32,3 +27,14 @@ class Match(models.Model):
 
     def __str__(self):
         return f"{self.user1.username} ❤️ {self.user2.username}"
+
+class UnmatchRecord(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='unmatches_initiated')
+    unmatched_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='unmatches_received')
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'unmatched_user')
+
+    def __str__(self):
+        return f"{self.user.username} unmatched {self.unmatched_user.username}"

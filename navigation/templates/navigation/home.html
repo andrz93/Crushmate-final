@@ -8,7 +8,20 @@
     Crushmate
   </h1>
 </div>
-
+{% if not has_main_photo %}
+<div class="bg-white border border-yellow-300 rounded-2xl shadow-lg p-5 mb-6 flex items-center space-x-4">
+  <svg class="w-6 h-6 text-yellow-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z"/>
+  </svg>
+  <div>
+    <p class="font-semibold text-yellow-700 text-lg mb-1">You're missing a main photo</p>
+    <p class="text-gray-700">
+      To be visible to other users, please upload your main profile picture. 
+      <a href="{% url 'profilepage' %}" class="text-blue-600 underline hover:text-blue-800">Upload now</a>.
+    </p>
+  </div>
+</div>
+{% endif %}
 <!-- 主內容容器 -->
 <div class="flex flex-col items-center justify-start min-h-screen bg-gray-100 pt-10 px-6">
   {% if recommendations %}
